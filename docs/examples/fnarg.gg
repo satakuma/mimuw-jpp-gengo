@@ -1,0 +1,30 @@
+fn copy(int x) -> int {
+    x = x + 2;
+    return x;
+}
+
+fn ref(int& x) -> int {
+    x = x + 2;
+    return x;
+}
+
+fn main() -> int {
+    int a = 5;
+    int b = copy(a);
+
+    // 7 5
+    print(b);
+    print(" ");
+    print(a);
+    print("\n");
+
+    int c = ref(a);
+
+    // 7 7
+    print(c);
+    print(" ");
+    print(a);
+    print("\n");
+
+    return 0;
+}

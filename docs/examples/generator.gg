@@ -1,0 +1,40 @@
+gn imiona() -> string {
+    yield "Ania";
+    yield "Maciek";
+    yield "Bartek";
+    yield "Kasia";
+}
+
+gn nieparzyste(int start) -> int {
+    int n = start;
+    if (start % 2 == 0) {
+        n = start + 1;
+    }
+    while (true) {
+        yield n;
+        n = n + 2;
+    }
+}
+
+fn main() -> int {
+    int i = 0;
+    for imie in (imiona()) {
+        print(i);
+        print(". ");
+        print(imie);
+        print("\n");
+        i = i + 1;
+    }
+    print("\n");
+
+    // Wypisze 5 7 9 11
+    int j = 0;
+    @(int) gen = nieparzyste(4);
+    while (j < 4) {
+        print(next(gen));
+        print("\n");
+        j = j + 1;
+    }
+
+    return 0;
+}
