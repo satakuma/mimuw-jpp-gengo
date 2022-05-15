@@ -1,0 +1,12 @@
+gn n() -> int {
+    int i = 0;
+    while (true) {
+        yield i;
+        i = i + 1;
+    }
+}
+        
+fn main() -> int {
+    print(n);
+    return 0;
+}

@@ -1,0 +1,11 @@
+gn g() -> int {
+    int a = 42;
+    bool b = true;
+    string c = "asdf";
+    a = b * c;
+    yield a;
+}
+
+fn main() -> int {
+    return 0;
+}

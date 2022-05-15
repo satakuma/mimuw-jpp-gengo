@@ -1,0 +1,8 @@
+fn n() -> int {
+    return 42;
+}
+        
+fn main() -> int {
+    print(n);
+    return 0;
+}

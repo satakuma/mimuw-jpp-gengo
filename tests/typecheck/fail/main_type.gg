@@ -1,0 +1,8 @@
+fn MaIn() -> int {
+    return 42;
+}
+
+fn main(int arg) -> int {
+    print("main has to be () -> int !!!");
+    return 0;
+}

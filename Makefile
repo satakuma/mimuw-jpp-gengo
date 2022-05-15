@@ -1,4 +1,4 @@
-interpreter: Gengo.hs AbsGengo.hs ErrM.hs LexGengo.hs ParGengo.hs PrintGengo.hs SkelGengo.hs
+interpreter: Gengo.hs AbsGengo.hs ErrM.hs LexGengo.hs ParGengo.hs PrintGengo.hs SkelGengo.hs Typecheck.hs
 	ghc --make $< -o gengo
 
 bnfc: Gengo.cf

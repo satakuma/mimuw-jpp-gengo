@@ -1,0 +1,21 @@
+fn fint(int x) -> int {
+    return x * 2;
+}
+
+fn fstr(string x) -> int {
+    print(x);
+    return 42;
+}
+
+fn fbool(bool x) -> int {
+    if (x) {
+        return 42;
+    } else {
+        return 43;
+    }
+}
+
+fn main() -> int {
+    fstr(42);
+    return 0;
+}

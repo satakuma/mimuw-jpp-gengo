@@ -1,0 +1,8 @@
+gn g() -> int {
+    string c = "asdf";
+    yield c;
+}
+
+fn main() -> int {
+    return 0;
+}

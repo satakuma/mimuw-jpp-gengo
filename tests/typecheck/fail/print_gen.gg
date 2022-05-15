@@ -1,0 +1,13 @@
+gn n() -> int {
+    int i = 0;
+    while (true) {
+        yield i;
+        i = i + 1;
+    }
+}
+        
+fn main() -> int {
+    @(int) ns = n();
+    print(ns);
+    return 0;
+}
