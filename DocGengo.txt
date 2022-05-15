@@ -31,17 +31,16 @@ The set of reserved words is the set of terminals appearing in the grammar. Thos
 
 The reserved words used in Gengo are the following:
   | ``bool`` | ``break`` | ``continue`` | ``else``
-  | ``false`` | ``fn`` | ``for`` | ``gn``
-  | ``if`` | ``in`` | ``int`` | ``return``
-  | ``string`` | ``true`` | ``while`` | ``yield``
+  | ``false`` | ``fn`` | ``if`` | ``int``
+  | ``return`` | ``string`` | ``true`` | ``while``
 
 The symbols used in Gengo are the following:
   | ( | ) | -> | &
   | , | { | } | ;
-  | = | @ | - | !
-  | && | || | + | *
-  | / | % | < | <=
-  | > | >= | == | !=
+  | = | - | ! | &&
+  | || | + | * | /
+  | % | < | <= | >
+  | >= | == | != |
 
 ===Comments===
 Single-line comments begin with //.Multiple-line comments are  enclosed with /* and */.
@@ -54,7 +53,6 @@ All other symbols are terminals.
 
   | //Program// | -> | //[TopDef]//
   | //TopDef// | -> | ``fn`` //Ident// ``(`` //[Arg]// ``)`` ``->`` //Type// //Block//
-  |  |  **|**  | ``gn`` //Ident// ``(`` //[Arg]// ``)`` ``->`` //Type// //Block//
   | //[TopDef]// | -> | //TopDef//
   |  |  **|**  | //TopDef// //[TopDef]//
   | //Arg// | -> | //Type// //Ident//
@@ -70,12 +68,10 @@ All other symbols are terminals.
   |  |  **|**  | //Type// //Ident// ``=`` //Expr// ``;``
   |  |  **|**  | //Ident// ``=`` //Expr// ``;``
   |  |  **|**  | ``return`` //Expr// ``;``
-  |  |  **|**  | ``yield`` //Expr// ``;``
   |  |  **|**  | ``break`` ``;``
   |  |  **|**  | ``continue`` ``;``
   |  |  **|**  | //If//
   |  |  **|**  | ``while`` ``(`` //Expr// ``)`` //Block//
-  |  |  **|**  | ``for`` //Ident// ``in`` ``(`` //Expr// ``)`` //Block//
   |  |  **|**  | //Expr// ``;``
   |  |  **|**  | //TopDef//
   | //If// | -> | ``if`` ``(`` //Expr// ``)`` //Block//
@@ -85,7 +81,6 @@ All other symbols are terminals.
   | //Type// | -> | ``int``
   |  |  **|**  | ``string``
   |  |  **|**  | ``bool``
-  |  |  **|**  | ``@`` ``(`` //Type// ``)``
   | //Expr6// | -> | //Ident//
   |  |  **|**  | //Integer//
   |  |  **|**  | ``true``

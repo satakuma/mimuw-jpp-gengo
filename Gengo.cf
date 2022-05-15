@@ -5,7 +5,7 @@ entrypoints Program ;
 Program.   Program ::= [TopDef] ;
 
 FnDef.	   TopDef ::= "fn" Ident "(" [Arg] ")" "->" Type Block ;
-GnDef.	   TopDef ::= "gn" Ident "(" [Arg] ")" "->" Type Block ;
+-- GnDef.	   TopDef ::= "gn" Ident "(" [Arg] ")" "->" Type Block ;
 
 separator nonempty TopDef "" ;
 
@@ -28,7 +28,7 @@ Init.      Stmt ::= Type Ident "=" Expr ";" ;
 Ass.       Stmt ::= Ident "=" Expr ";" ;
 
 Ret.       Stmt ::= "return" Expr ";" ;
-Yield.     Stmt ::= "yield" Expr ";" ;
+-- Yield.     Stmt ::= "yield" Expr ";" ;
 Break.     Stmt ::= "break" ";" ;
 Continue.  Stmt ::= "continue" ";" ;
 
@@ -39,7 +39,7 @@ IfElse.    If   ::= "if" "(" Expr ")" Block "else" Else ;
 rules      Else ::= Block | If ;
 
 While.     Stmt ::= "while" "(" Expr ")" Block ;
-For.       Stmt ::= "for" Ident "in" "(" Expr ")" Block ;
+-- For.       Stmt ::= "for" Ident "in" "(" Expr ")" Block ;
 
 SExp.      Stmt ::= Expr ";" ;
 
@@ -50,7 +50,7 @@ NestFn.    Stmt ::= TopDef ;
 Int.       Type ::= "int" ;
 Str.       Type ::= "string" ;
 Bool.      Type ::= "bool" ;
-Generator. Type ::= "@" "(" Type ")" ;
+-- Generator. Type ::= "@" "(" Type ")" ;
 
 -- internal   Fun. Type ::= Type "(" [Type] ")" ;
 -- separator  Type "," ;

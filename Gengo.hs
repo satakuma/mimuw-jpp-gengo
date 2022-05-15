@@ -34,7 +34,7 @@ putStrV :: Verbosity -> String -> IO ()
 putStrV v s = when (v > 1) $ putStrLn s
 
 runFile :: Verbosity -> FilePath -> IO ()
-runFile v f = putStrLn f >> readFile f >>= run v
+runFile v f = putStrV v f >> readFile f >>= run v
 
 run :: Verbosity -> String -> IO ()
 run v input =
@@ -58,7 +58,6 @@ run v input =
              Right _ -> do
                putStrV v "Typecheck successful!\n"
                interpretRes <- runInterpreter $ interpret tree
-               -- interpretRes <- runTypecheck $ typecheck tree
                case interpretRes of
                  Left err -> do
                    hPutStrLn stderr (show err)
@@ -79,6 +78,8 @@ main :: IO ()
 main = do
   args <- getArgs
   case args of
-    [] -> getContents >>= run 2
-    fs -> mapM_ (runFile 2) fs
+    ["-v"] -> getContents >>= run 2
+    [] -> getContents >>= run 0
+    ("-v":fs) -> mapM_ (runFile 2) fs
+    fs -> mapM_ (runFile 0) fs
 

@@ -101,7 +101,7 @@ instance Executable Program where
     local (Map.insert (getTopDefIdent tdef) loc) (interpret $ Program p tdefs)
 
 instance Executable TopDef where
-  interpret (GnDef p ident args rtype block) = undefined -- interpret (FnDef p ident args rtype block)
+  -- interpret (GnDef p ident args rtype block) = undefined
   interpret (FnDef p ident args rtype block) = do
     env <- ask
     return $ VFn env args block
@@ -159,7 +159,7 @@ instance Executable [Stmt] where
         state <- get
         put (state { returnV = Just value })
         return VVoid
-      Yield p e -> undefined
+      -- Yield p e -> undefined
       SExp p e -> interpret e >> rest
       NestFn p tdef -> do
         loc <- alloc
@@ -174,7 +174,7 @@ instance Executable [Stmt] where
         state <- get
         put (state { loopInterrupt = Just IContinue })
         return VVoid
-      For p ident e block -> undefined
+      -- For p ident e block -> undefined
       w@(While p e block) -> do
         (VBool condition) <- interpret e
         if condition then do

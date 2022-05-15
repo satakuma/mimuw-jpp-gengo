@@ -147,7 +147,6 @@ instance Print (AbsGengo.Program' a) where
 instance Print (AbsGengo.TopDef' a) where
   prt i = \case
     AbsGengo.FnDef _ id_ args type_ block -> prPrec i 0 (concatD [doc (showString "fn"), prt 0 id_, doc (showString "("), prt 0 args, doc (showString ")"), doc (showString "->"), prt 0 type_, prt 0 block])
-    AbsGengo.GnDef _ id_ args type_ block -> prPrec i 0 (concatD [doc (showString "gn"), prt 0 id_, doc (showString "("), prt 0 args, doc (showString ")"), doc (showString "->"), prt 0 type_, prt 0 block])
 
 instance Print [AbsGengo.TopDef' a] where
   prt _ [] = concatD []
@@ -179,12 +178,10 @@ instance Print (AbsGengo.Stmt' a) where
     AbsGengo.Init _ type_ id_ expr -> prPrec i 0 (concatD [prt 0 type_, prt 0 id_, doc (showString "="), prt 0 expr, doc (showString ";")])
     AbsGengo.Ass _ id_ expr -> prPrec i 0 (concatD [prt 0 id_, doc (showString "="), prt 0 expr, doc (showString ";")])
     AbsGengo.Ret _ expr -> prPrec i 0 (concatD [doc (showString "return"), prt 0 expr, doc (showString ";")])
-    AbsGengo.Yield _ expr -> prPrec i 0 (concatD [doc (showString "yield"), prt 0 expr, doc (showString ";")])
     AbsGengo.Break _ -> prPrec i 0 (concatD [doc (showString "break"), doc (showString ";")])
     AbsGengo.Continue _ -> prPrec i 0 (concatD [doc (showString "continue"), doc (showString ";")])
     AbsGengo.Cond _ if_ -> prPrec i 0 (concatD [prt 0 if_])
     AbsGengo.While _ expr block -> prPrec i 0 (concatD [doc (showString "while"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 block])
-    AbsGengo.For _ id_ expr block -> prPrec i 0 (concatD [doc (showString "for"), prt 0 id_, doc (showString "in"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 block])
     AbsGengo.SExp _ expr -> prPrec i 0 (concatD [prt 0 expr, doc (showString ";")])
     AbsGengo.NestFn _ topdef -> prPrec i 0 (concatD [prt 0 topdef])
 
@@ -203,7 +200,6 @@ instance Print (AbsGengo.Type' a) where
     AbsGengo.Int _ -> prPrec i 0 (concatD [doc (showString "int")])
     AbsGengo.Str _ -> prPrec i 0 (concatD [doc (showString "string")])
     AbsGengo.Bool _ -> prPrec i 0 (concatD [doc (showString "bool")])
-    AbsGengo.Generator _ type_ -> prPrec i 0 (concatD [doc (showString "@"), doc (showString "("), prt 0 type_, doc (showString ")")])
 
 instance Print (AbsGengo.Expr' a) where
   prt i = \case

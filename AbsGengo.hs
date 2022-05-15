@@ -23,9 +23,7 @@ data Program' a = Program a [TopDef' a]
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type TopDef = TopDef' BNFC'Position
-data TopDef' a
-    = FnDef a Ident [Arg' a] (Type' a) (Block' a)
-    | GnDef a Ident [Arg' a] (Type' a) (Block' a)
+data TopDef' a = FnDef a Ident [Arg' a] (Type' a) (Block' a)
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type Arg = Arg' BNFC'Position
@@ -43,12 +41,10 @@ data Stmt' a
     | Init a (Type' a) Ident (Expr' a)
     | Ass a Ident (Expr' a)
     | Ret a (Expr' a)
-    | Yield a (Expr' a)
     | Break a
     | Continue a
     | Cond a (If' a)
     | While a (Expr' a) (Block' a)
-    | For a Ident (Expr' a) (Block' a)
     | SExp a (Expr' a)
     | NestFn a (TopDef' a)
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
@@ -64,7 +60,7 @@ data Else' a = ElseBlock a (Block' a) | ElseIf a (If' a)
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type Type = Type' BNFC'Position
-data Type' a = Int a | Str a | Bool a | Generator a (Type' a)
+data Type' a = Int a | Str a | Bool a
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type Expr = Expr' BNFC'Position
@@ -121,7 +117,6 @@ instance HasPosition Program where
 instance HasPosition TopDef where
   hasPosition = \case
     FnDef p _ _ _ _ -> p
-    GnDef p _ _ _ _ -> p
 
 instance HasPosition Arg where
   hasPosition = \case
@@ -139,12 +134,10 @@ instance HasPosition Stmt where
     Init p _ _ _ -> p
     Ass p _ _ -> p
     Ret p _ -> p
-    Yield p _ -> p
     Break p -> p
     Continue p -> p
     Cond p _ -> p
     While p _ _ -> p
-    For p _ _ _ -> p
     SExp p _ -> p
     NestFn p _ -> p
 
@@ -163,7 +156,6 @@ instance HasPosition Type where
     Int p -> p
     Str p -> p
     Bool p -> p
-    Generator p _ -> p
 
 instance HasPosition Expr where
   hasPosition = \case

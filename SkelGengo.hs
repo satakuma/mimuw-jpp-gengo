@@ -26,7 +26,6 @@ transProgram x = case x of
 transTopDef :: Show a => AbsGengo.TopDef' a -> Result
 transTopDef x = case x of
   AbsGengo.FnDef _ ident args type_ block -> failure x
-  AbsGengo.GnDef _ ident args type_ block -> failure x
 
 transArg :: Show a => AbsGengo.Arg' a -> Result
 transArg x = case x of
@@ -44,12 +43,10 @@ transStmt x = case x of
   AbsGengo.Init _ type_ ident expr -> failure x
   AbsGengo.Ass _ ident expr -> failure x
   AbsGengo.Ret _ expr -> failure x
-  AbsGengo.Yield _ expr -> failure x
   AbsGengo.Break _ -> failure x
   AbsGengo.Continue _ -> failure x
   AbsGengo.Cond _ if_ -> failure x
   AbsGengo.While _ expr block -> failure x
-  AbsGengo.For _ ident expr block -> failure x
   AbsGengo.SExp _ expr -> failure x
   AbsGengo.NestFn _ topdef -> failure x
 
@@ -68,7 +65,6 @@ transType x = case x of
   AbsGengo.Int _ -> failure x
   AbsGengo.Str _ -> failure x
   AbsGengo.Bool _ -> failure x
-  AbsGengo.Generator _ type_ -> failure x
 
 transExpr :: Show a => AbsGengo.Expr' a -> Result
 transExpr x = case x of
