@@ -8,7 +8,9 @@ import           Control.Monad.IO.Class
 import           Control.Monad.Reader
 import           Control.Monad.Identity
 import           Control.Monad.State.Lazy
+import qualified Data.Int
 import           Data.Map
+import           Data.List                (intercalate)
 import qualified Data.Map                 as Map
 import           Data.Maybe               (maybeToList)
 import           Data.Void                (Void)
@@ -21,62 +23,88 @@ type Env = Map Ident TPType
 env0 :: Env
 env0 = Map.empty
 
+
 type TypecheckM a = ReaderT Env (ExceptT TPException IO) a
 
 runTypecheck :: TypecheckM a -> IO (Either TPException a)
 runTypecheck tp = runExceptT (runReaderT tp env0)
 
+
 data TPException
-  = TypecheckError String
+  = TypecheckError String Pos
   | MismatchedType TPType TPType Pos
   | NoVariable String Pos
-  | ForWithoutGenerator TPType Pos
-  deriving (Eq, Ord, Show, Read)
+  | InvalidRefArg Pos
+  | InvalidArgCount Data.Int.Int Data.Int.Int Pos
+  deriving (Eq, Ord, Read)
+
+instance Show TPException where
+  show e =
+    case e of
+      TypecheckError s p -> "Typecheck error: " ++ s ++ showpos p
+      MismatchedType t1 t2 p -> "Mismatched types: " ++ show t1 ++ " vs " ++ show t2 ++ showpos p
+      NoVariable s p -> "No variable in scope: " ++ s ++ showpos p
+      InvalidRefArg p -> "Invalid expression for a reference argument" ++ showpos p
+      InvalidArgCount c1 c2 p -> "Invalid function argument count: " ++ show c1 ++ " vs " ++ show c2 ++ showpos p
+    where
+      showpos pos = case pos of
+        Just p -> " @ " ++ show p
+        Nothing -> ""
+
 
 data TPType
   = TPFn [Arg] TPType
-  -- | TPGn [Arg] TPType
-  -- | TPGenerator TPType
   | TPInt
   | TPBool
   | TPString
   | TPVoid
-  deriving (Eq, Ord, Show, Read)
+  deriving (Eq, Ord, Read)
+
+instance Show TPType where
+  show t =
+    case t of
+      TPFn args rtype -> "fn(" ++ intercalate "," (Prelude.map show args) ++ ") -> " ++ show rtype
+      TPInt -> "int"
+      TPBool -> "bool"
+      TPString -> "string"
+      TPVoid -> "void"
+
 
 class ToTypecheck a where
   typecheck :: a -> TypecheckM TPType
 
+
 type Pos = BNFC'Position
+
 
 instance ToTypecheck (Type' a) where
   typecheck (Int _) = return TPInt
   typecheck (Str _) = return TPString
   typecheck (Bool _) = return TPBool
-  {-
-  typecheck (Generator _ t) = do
-    genType <- typecheck t
-    return (TPGenerator genType)
-  -}
+
 
 instance ToTypecheck Arg where
   typecheck (VArg _ t _) = typecheck t
   typecheck (RefArg _ t _) = typecheck t
 
+
 checkType :: Pos -> TPType -> TPType -> TypecheckM ()
 checkType p expected returned =
   if expected /= returned then throwError (MismatchedType expected returned p) else return ()
+
 
 lookupVar :: Ident -> TypecheckM (Maybe TPType)
 lookupVar ident = do
   env <- ask
   return $ Map.lookup ident env
 
+
 instance ToTypecheck (Expr' Pos) where
   typecheck (EVar p ident@(Ident name)) = do
     t <- lookupVar ident
     case t of
       Just t' -> return t'
-      _ -> ask >>= (liftIO . putStrLn . show) >> throwError (NoVariable name p)
+      _ -> throwError (NoVariable name p)
   typecheck (ELitInt _ _) = return TPInt
   typecheck (ELitTrue _) = return TPBool
   typecheck (ELitFalse _) = return TPBool
@@ -123,18 +151,20 @@ instance ToTypecheck (Expr' Pos) where
     t <- lookupVar ident
     case t of
       Just (TPFn args' rett) -> do
-        sequence_ $ zipWith (checkArg p) args' args
+        let l1 = length args
+        let l2 = length args'
+        when (l1 /= l2) (throwError $ InvalidArgCount l1 l2 p)
+        sequence_ $ zipWith checkArg args' args
         return rett
-      -- Just (TPGn argst' rett) -> undefined
       Nothing -> do
         argst <- mapM typecheck args
         if name `elem` builtInNames then
           typecheckBuiltIn p name argst
         else throwError (NoVariable name p)
-      _ -> throwError (NoVariable name p)
     where
-      checkArg :: Pos -> Arg -> Expr -> TypecheckM ()
-      checkArg pos arg expr =
+      checkArg :: Arg -> Expr -> TypecheckM ()
+      checkArg arg expr =
+        let pos = hasPosition expr in
         case arg of
           VArg _ t ident -> do
             t' <- typecheck t
@@ -146,23 +176,17 @@ instance ToTypecheck (Expr' Pos) where
             checkType pos t' expr'
             case expr of
               EVar _ _ -> return ()
-              _ -> throwError $ TypecheckError "non-variable expression passed as a reference"
+              _ -> throwError $ InvalidRefArg pos
 
-
+-- Typecheck builtin function application (print)
 typecheckBuiltIn :: Pos -> String -> [TPType] -> TypecheckM TPType
 typecheckBuiltIn p name args = do
   case name of
     "print" -> do
-      when (length args /= 1) $ throwError (TypecheckError "Invalid argument count for the print function")
-      when (not ((head args) `elem` [TPInt, TPString, TPBool])) $ throwError (TypecheckError "Invalid argument type for print function")
+      when (length args /= 1) $ throwError (InvalidArgCount (length args) 1 p)
+      when (not ((head args) `elem` [TPInt, TPString, TPBool]))
+        $ throwError (TypecheckError "Invalid argument type for print function" p)
       return TPVoid
-    {-
-    "next" -> do
-      when (length args /= 1) $ throwError (TypecheckError "Invalid argument count for the next function")
-      case head args of
-        TPGenerator gtype -> return gtype
-        _ -> throwError (TypecheckError "Invalid argument type for the next function")
-    -}
 
 
 instance ToTypecheck [Stmt] where
@@ -183,7 +207,6 @@ instance ToTypecheck [Stmt] where
           Just t' -> checkType p t' e' >> rest
           _ -> let (Ident name) = ident in throwError (NoVariable name p)
       Ret p e -> typecheck e >> rest
-      -- Yield p e -> typecheck e >> rest
       SExp p e -> typecheck e >> rest
       NestFn p tdef -> do
         t <- typecheck tdef
@@ -196,15 +219,6 @@ instance ToTypecheck [Stmt] where
         checkType p TPBool e'
         typecheck block
         rest
-      {-
-      For p ident e block -> do
-        e' <- typecheck e
-        case e' of 
-          TPGenerator gent -> do
-            local (Map.insert ident gent) (typecheck block)
-            rest
-          t -> throwError (ForWithoutGenerator t (hasPosition e))
-      -}
     where
       rest = typecheck stmts
     
@@ -225,6 +239,8 @@ instance ToTypecheck Else where
     ElseBlock p b -> typecheck b
     ElseIf p ifStmt -> typecheck ifStmt
 
+
+-- Check if expressions in return statements have correct type
 typecheckYieldReturn :: TPType -> [Stmt] -> TypecheckM ()
 typecheckYieldReturn _ [] = return ();
 typecheckYieldReturn expected (stmt:stmts) =
@@ -235,28 +251,13 @@ typecheckYieldReturn expected (stmt:stmts) =
         local (Map.insert ident t') rest
       Ret p e -> do
         t <- typecheck e
-        when (t /= expected) $ throwError (TypecheckError "invalid return")
+        checkType p expected t
         rest
-      {-
-      Yield p e -> do
-        t <- typecheck e
-        when (t /= expected) $ throwError (TypecheckError "invalid yield")
-        rest
-      -}
       NestFn p tdef -> do
         t <- typecheck tdef
         local (Map.insert (getTopDefIdent tdef) t) rest
       Cond p block -> typecheckYieldReturnIf block >> rest
       While p _ (Block _ block) -> typecheckYieldReturn expected block >> rest
-      {-
-      For p ident e (Block _ block) -> do
-        e' <- typecheck e
-        case e' of 
-          TPGenerator gent -> do
-            local (Map.insert ident gent) (typecheckYieldReturn expected block)
-            rest
-          _ -> rest
-      -}
       _ -> rest
   where
     rest = typecheckYieldReturn expected stmts
@@ -269,8 +270,10 @@ typecheckYieldReturn expected (stmt:stmts) =
       ElseBlock _ (Block _ stmts) -> typecheckYieldReturn expected stmts
       ElseIf _ ifStmt -> typecheckYieldReturnIf ifStmt
 
+
 instance ToTypecheck Block where
   typecheck (Block p stmts) = typecheck stmts
+
 
 instance ToTypecheck TopDef where
   typecheck (FnDef p ident args rtype block@(Block _ stmts)) = do
@@ -282,19 +285,6 @@ instance ToTypecheck TopDef where
     local updateEnv (typecheck block)
     local updateEnv (typecheckYieldReturn tpRtype stmts)
     return fnType
-  {-
-  typecheck (GnDef p ident args rtype block@(Block _ stmts)) = do
-    tpArgs <- mapM typecheck args
-    tpRtype <- typecheck rtype
-    let gnType = TPGn tpArgs tpRtype 
-        newVars = (ident, gnType) : (zip (Prelude.map getArgIdent args) tpArgs)
-        updateEnv env = Prelude.foldl (\e (k, v) -> Map.insert k v e) env newVars
-     in do
-       local updateEnv (typecheck block)
-       -- local updateEnv (checkReturnType tpRtype block)
-       local updateEnv (typecheckYieldReturn tpRtype stmts)
-       return gnType
-  -}
 
 
 instance ToTypecheck Program where
@@ -302,7 +292,7 @@ instance ToTypecheck Program where
     mainFn <- lookupVar mainFnIdent
     case mainFn of
       Just (TPFn [] TPInt) -> return TPInt
-      _ -> throwError (TypecheckError "invalid main type or no main")
+      _ -> throwError (TypecheckError "Invalid main function or no main function" Nothing)
   typecheck (Program p (tdef:tdefs)) = do
     t <- typecheck tdef
     local (Map.insert (getTopDefIdent tdef) t) (typecheck $ Program p tdefs)

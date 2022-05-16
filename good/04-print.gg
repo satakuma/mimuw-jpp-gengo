@@ -1,0 +1,10 @@
+fn main() -> int {
+    print(42);
+    print("\n");
+
+    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n");
+
+    print(true);
+
+    return 0;
+}

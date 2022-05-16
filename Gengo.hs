@@ -28,6 +28,7 @@ import SkelGengo  ()
 import Interpreter
 import Typecheck
 
+
 type Verbosity  = Int
 
 putStrV :: Verbosity -> String -> IO ()
@@ -53,6 +54,7 @@ run v input =
            typecheckRes <- runTypecheck $ typecheck tree
            case typecheckRes of
              Left err -> do
+               hPutStrLn stderr "== Typecheck error ===="
                hPutStrLn stderr (show err)
                exitFailure
              Right _ -> do
@@ -60,6 +62,7 @@ run v input =
                interpretRes <- runInterpreter $ interpret tree
                case interpretRes of
                  Left err -> do
+                   hPutStrLn stderr "== Runtime error ===="
                    hPutStrLn stderr (show err)
                    exitFailure
                  Right (VInt exitCode) -> case exitCode of

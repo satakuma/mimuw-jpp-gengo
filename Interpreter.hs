@@ -174,14 +174,13 @@ instance Executable [Stmt] where
         state <- get
         put (state { loopInterrupt = Just IContinue })
         return VVoid
-      -- For p ident e block -> undefined
       w@(While p e block) -> do
         (VBool condition) <- interpret e
         if condition then do
           interrupt <- interpretLoopBlock block
           case interrupt of
             Just IBreak -> ifNotInterrupted rest
-            _ -> interpret (w:stmts)
+            _ -> ifNotInterrupted (interpret (w:stmts))
         else rest
       Cond p block -> interpret block >> ifNotInterrupted rest
     where
@@ -258,15 +257,16 @@ instance Executable Expr where
       EApp p ident@(Ident name) args -> do
         f <- lookupValue ident
         case f of
-          Just (VFn env args' block) -> do
-            env' <- foldM (\env (a, e) -> addArg env a e) env (zip args' args)
+          Just fn@(VFn env args' block) -> do
+            loc <- alloc
+            storeValue loc fn
+            env' <- foldM (\env (a, e) -> addArg env a e) (Map.insert ident loc env) (zip args' args)
             local (const env') (interpretFnBlock block)
           Nothing -> case name of 
             "print" -> do
               value <- interpret (head args)
               liftIO $ putStr (show value)
               return VVoid
-            -- "next" -> 
     where
       addArg :: Env -> Arg -> Expr -> InterpretM Env
       addArg env arg expr = do

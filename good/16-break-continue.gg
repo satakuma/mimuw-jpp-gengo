@@ -1,0 +1,48 @@
+fn prime(int n) -> bool {
+    if (n < 2) {
+        return false;
+    }
+
+    int i = 2;
+    while (i < n) {
+        if (n % i == 0) {
+            return false; // zagniezdzony return w funkcji
+        }
+        i = i + 1;
+    }
+    return true;
+}
+
+fn goldbach(int n) -> int {
+    if (n <= 4 || n % 2 == 1) {
+        return -1;
+    }
+
+    int x = 2;
+    while (x < n) {
+        if (prime(x) && prime(n - x)) {
+            break;
+        }
+        x = x + 1;
+        continue;
+        print("to sie nigdy nie wypisze");
+    }
+
+    if (prime(x) && prime(n - x)) {
+        return x;
+    } else {
+        print("Hipoteza obalona "); print(n);
+        return -1;
+    }
+}
+
+fn main() -> int {
+    int n = 16;
+    int x = goldbach(n);
+    print(n); print(" = ");
+    print(x); print(" + ");
+    print(n - x); print("\n");
+
+    return 0;
+}
+

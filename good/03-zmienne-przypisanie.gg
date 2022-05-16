@@ -1,0 +1,10 @@
+fn main() -> int {
+    int a = 1;
+    int b = 2;
+    int c = 3;
+    print(a + b + c); print("\n");
+    a = 5;
+    print(b + c == a);
+
+    return 0;
+}

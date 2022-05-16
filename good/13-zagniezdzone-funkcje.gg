@@ -1,0 +1,32 @@
+fn f(int arg) -> int {
+    int licznik = 5;
+    string status = "jeszcze nie";
+
+    fn tick() -> bool {
+        int licznik = 42;
+        print(" >> Moj licznik to zawsze "); print(licznik); print("\n");
+
+        arg = arg - 1;
+        if (arg == 0) {
+            status = "juz!!!";
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    while (!tick()) {
+        licznik = licznik - 1;
+        print(status);
+        print("\n");
+    }
+    print(status);
+    print("\n");
+
+    return licznik;
+}
+
+fn main() -> int {
+    print(f(10));
+    return 0;
+}

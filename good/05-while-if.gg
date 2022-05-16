@@ -1,0 +1,17 @@
+fn main() -> int {
+    int from = 0;
+    int to = 7;
+    while (from < to) {
+        print(from);
+        if (from % 3 == 0) {
+            print(" podzielna przez 3\n");
+        } else if (from % 3 == 1) {
+            print(" niepodzielna przez 3 (reszta 1)\n");
+        } else {
+            print(" niepodzielna przez 3 (reszta 2)\n");
+        }
+        from = from + 1;
+    }
+
+    return 0;
+}

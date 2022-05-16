@@ -1,0 +1,10 @@
+fn main() -> int {
+    print(-1 < 1);
+    print("\n");
+    print(10 * 13 / 5 % 7);
+    print("\n");
+    bool b = 10 < 11;
+    print(true && b);
+
+    return 0;
+}

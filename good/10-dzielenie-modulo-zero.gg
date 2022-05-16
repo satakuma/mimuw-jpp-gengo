@@ -1,0 +1,14 @@
+fn f() -> int {
+    return 5 / 0;
+}
+
+fn g() -> int {
+    return 5 % 0;
+}
+
+fn main() -> int {
+    print(f());
+    print(g());
+
+    return 0;
+}

@@ -1,0 +1,9 @@
+fn f(int x) -> int {
+    return x + a; // nie ma `a`
+}
+
+fn main() -> int {
+    int a = 5;
+    int b = f(a);
+    return 0;
+}

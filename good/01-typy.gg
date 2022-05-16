@@ -1,0 +1,7 @@
+fn main() -> int {
+    int a = 2;
+    string s = "aaaa";
+    bool b = true;
+
+    return 0;
+}

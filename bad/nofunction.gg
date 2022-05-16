@@ -1,0 +1,11 @@
+fn main() -> int {
+    int a = 5;
+    int b = f(a);
+    return 0;
+}
+
+// Kolejnosc funkcji ma znaczenie, main nie widzi f
+fn f(int x) -> int {
+    return x * 2;
+}
+

@@ -1,0 +1,4 @@
+fn main() -> int {
+    print("Po przykłady statycznego typowania proszę spojrzeć do folderu bad/\n");
+    return 0;
+}

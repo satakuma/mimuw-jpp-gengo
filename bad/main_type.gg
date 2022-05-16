@@ -2,7 +2,7 @@ fn MaIn() -> int {
     return 42;
 }
 
-fn main(int arg) -> int {
+fn main(int arg, string args) -> int {
     print("main has to be () -> int !!!");
     return 0;
 }

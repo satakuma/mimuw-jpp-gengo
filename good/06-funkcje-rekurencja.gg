@@ -1,0 +1,31 @@
+fn factorial(int n) -> int {
+    if (n <= 0) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
+
+fn compare(int n, int m) -> bool {
+    int a = factorial(n);
+    int b = factorial(m);
+    return a < b;
+}
+
+fn main() -> int {
+    int n = 5;
+    print("Silnia z "); print(n); print(" to ");
+    print(factorial(n));
+    print("\n");
+
+    int m = 6;
+    print(n); print("!");
+    if (compare(n, m)) {
+        print(" < ");
+    } else {
+        print(" >= ");
+    }
+    print(m); print("!\n");
+
+    return 0;
+}

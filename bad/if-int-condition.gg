@@ -1,0 +1,11 @@
+fn main() -> int {
+    int a = 5;
+    int b = 4;
+
+    // warunek to nie bool
+    if (a - b) {
+        print(true);
+    }
+    
+    return 0;
+}

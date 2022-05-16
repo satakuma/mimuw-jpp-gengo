@@ -1,8 +1,0 @@
-fn f() -> int {
-    return 42;
-}
-
-fn main() -> int {
-    print(f());
-    return 0;
-}

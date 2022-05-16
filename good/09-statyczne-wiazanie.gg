@@ -1,0 +1,12 @@
+fn main() -> int {
+    int x = 5;
+    string x = "6\n"; // przesloniecie
+    print(x);
+    { 
+        int x = 7; // przesloniecie w bloku
+        print(x); print("\n");
+    }
+    print(x);
+
+    return 0;
+}
