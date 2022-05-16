@@ -2,6 +2,8 @@ module Utils where
 
 import           AbsGengo
 
+type Pos = BNFC'Position
+
 mainFnIdent = Ident "main"
 
 builtInNames = ["print"]

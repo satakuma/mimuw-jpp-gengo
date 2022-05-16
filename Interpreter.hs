@@ -37,10 +37,12 @@ store0 = InterpreterState {
   returnV = Nothing
 }
 
+
 type InterpretM a = ReaderT Env (StateT InterpreterState (ExceptT InterpretException IO)) a
 
 runInterpreter :: InterpretM a -> IO (Either InterpretException a)
 runInterpreter prog = runExceptT (evalStateT (runReaderT prog env0) store0)
+
 
 data Value
   = VInt Integer
@@ -57,12 +59,26 @@ instance Show Value where
     VBool b -> show b
     _ -> undefined
 
-data InterpretException
-  = GenericException String
-  deriving (Eq, Read, Show)
 
-class Executable a where
-  interpret :: a -> InterpretM Value
+data InterpretException
+  = NoReturn Pos
+  | InvalidBreak Pos
+  | InvalidContinue Pos
+  | ZeroDivisionError Pos
+  deriving (Eq, Read)
+
+instance Show InterpretException where
+  show e =
+    case e of
+      NoReturn p -> "Function exited without return" ++ showpos p
+      InvalidBreak p -> "break statement in invalid context" ++ showpos p
+      InvalidContinue p -> "continue statement in invalid context" ++ showpos p
+      ZeroDivisionError p -> "Division by zero" ++ showpos p
+    where
+      showpos pos = case pos of
+        Just p -> " @ " ++ show p
+        Nothing -> ""
+
 
 alloc :: InterpretM Loc
 alloc = do
@@ -88,20 +104,23 @@ lookupValue ident = do
       return $ Map.lookup loc' store
     _ -> return Nothing
 
+
+class Executable a where
+  interpret :: a -> InterpretM Value
+
+
 instance Executable Program where
   interpret (Program _ []) = do
-    main <- lookupValue mainFnIdent
-    case main of
-      Just (VFn env _ block) -> local (const env) (interpretFnBlock block)
-      _ -> throwError $ GenericException "no main function"
+    (Just (VFn env _ block)) <- lookupValue mainFnIdent
+    local (const env) (interpretFnBlock block)
   interpret (Program p (tdef:tdefs)) = do
     loc <- alloc
     fn <- interpret tdef
     storeValue loc fn
     local (Map.insert (getTopDefIdent tdef) loc) (interpret $ Program p tdefs)
 
+
 instance Executable TopDef where
-  -- interpret (GnDef p ident args rtype block) = undefined
   interpret (FnDef p ident args rtype block) = do
     env <- ask
     return $ VFn env args block
@@ -112,9 +131,11 @@ interpretFnBlock block = do
   interpret block
   state@(InterpreterState _ loop returnv) <- get
   if isJust loop then
-    throwError $ GenericException "break or continue in invalid context"
+    case loop of
+      Just IBreak -> throwError $ InvalidBreak (hasPosition block)
+      Just IContinue -> throwError $ InvalidContinue (hasPosition block)
   else if isNothing returnv then
-    throwError $ GenericException "function exited without return"
+    throwError $ NoReturn (hasPosition block)
   else do
     put (state { returnV = Nothing })
     return $ fromJust returnv
@@ -129,13 +150,16 @@ interpretLoopBlock block = do
     put (state { loopInterrupt = Nothing })
     return loop
 
+
 instance Executable Block where
   interpret (Block p stmts) = interpret stmts
+
 
 ifNotInterrupted :: InterpretM Value -> InterpretM Value
 ifNotInterrupted exec = do
   (InterpreterState _ loop returnv) <- get
   if isNothing loop && isNothing returnv then exec else return VVoid
+
 
 instance Executable [Stmt] where
   interpret [] = return VVoid
@@ -149,17 +173,15 @@ instance Executable [Stmt] where
         storeValue loc value
         local (Map.insert ident loc) rest
       Ass p ident e -> do
-        loc <- lookupVar ident
-        when (isNothing loc) (throwError $ GenericException "typechecker logic error")
+        (Just loc) <- lookupVar ident
         value <- interpret e
-        storeValue (fromJust loc) value
+        storeValue loc value
         rest
       Ret p e -> do 
         value <- interpret e
         state <- get
         put (state { returnV = Just value })
         return VVoid
-      -- Yield p e -> undefined
       SExp p e -> interpret e >> rest
       NestFn p tdef -> do
         loc <- alloc
@@ -205,6 +227,7 @@ instance Executable Else where
     ElseBlock p block -> interpret block
     ElseIf p ifStmt -> interpret ifStmt
 
+
 instance Executable Expr where
   interpret expr =
     case expr of
@@ -231,10 +254,10 @@ instance Executable Expr where
         case op of
           Times _ -> return (VInt (i1 * i2))
           Div _ -> do
-            when (i2 == 0) (throwError (GenericException "division by zero"))
+            when (i2 == 0) (throwError (ZeroDivisionError p))
             return (VInt (i1 `div` i2))
           Mod _ -> do
-            when (i2 == 0) (throwError (GenericException "division by zero"))
+            when (i2 == 0) (throwError (ZeroDivisionError p))
             return (VInt (i1 `mod` i2))
       ERel p e1 op e2 -> do
         (VInt i1) <- interpret e1
@@ -280,4 +303,3 @@ instance Executable Expr where
             let (EVar _ ident') = expr
             (Just loc) <- lookupVar ident'
             return (Map.insert ident loc env)
-

@@ -74,9 +74,6 @@ class ToTypecheck a where
   typecheck :: a -> TypecheckM TPType
 
 
-type Pos = BNFC'Position
-
-
 instance ToTypecheck (Type' a) where
   typecheck (Int _) = return TPInt
   typecheck (Str _) = return TPString
