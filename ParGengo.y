@@ -41,23 +41,24 @@ import LexGengo
   '<='       { PT _ (TS _ 16) }
   '='        { PT _ (TS _ 17) }
   '=='       { PT _ (TS _ 18) }
-  '>'        { PT _ (TS _ 19) }
-  '>='       { PT _ (TS _ 20) }
-  'bool'     { PT _ (TS _ 21) }
-  'break'    { PT _ (TS _ 22) }
-  'continue' { PT _ (TS _ 23) }
-  'else'     { PT _ (TS _ 24) }
-  'false'    { PT _ (TS _ 25) }
-  'fn'       { PT _ (TS _ 26) }
-  'if'       { PT _ (TS _ 27) }
-  'int'      { PT _ (TS _ 28) }
-  'return'   { PT _ (TS _ 29) }
-  'string'   { PT _ (TS _ 30) }
-  'true'     { PT _ (TS _ 31) }
-  'while'    { PT _ (TS _ 32) }
-  '{'        { PT _ (TS _ 33) }
-  '||'       { PT _ (TS _ 34) }
-  '}'        { PT _ (TS _ 35) }
+  '=>'       { PT _ (TS _ 19) }
+  '>'        { PT _ (TS _ 20) }
+  '>='       { PT _ (TS _ 21) }
+  'bool'     { PT _ (TS _ 22) }
+  'break'    { PT _ (TS _ 23) }
+  'continue' { PT _ (TS _ 24) }
+  'else'     { PT _ (TS _ 25) }
+  'false'    { PT _ (TS _ 26) }
+  'fn'       { PT _ (TS _ 27) }
+  'if'       { PT _ (TS _ 28) }
+  'int'      { PT _ (TS _ 29) }
+  'return'   { PT _ (TS _ 30) }
+  'string'   { PT _ (TS _ 31) }
+  'true'     { PT _ (TS _ 32) }
+  'while'    { PT _ (TS _ 33) }
+  '{'        { PT _ (TS _ 34) }
+  '||'       { PT _ (TS _ 35) }
+  '}'        { PT _ (TS _ 36) }
   L_Ident    { PT _ (TV _)    }
   L_integ    { PT _ (TI _)    }
   L_quoted   { PT _ (TL _)    }
@@ -86,10 +87,20 @@ ListTopDef
   : TopDef { (fst $1, (:[]) (snd $1)) }
   | TopDef ListTopDef { (fst $1, (:) (snd $1) (snd $2)) }
 
+ArgType :: { (AbsGengo.BNFC'Position, AbsGengo.ArgType) }
+ArgType
+  : Type { (fst $1, AbsGengo.VArg (fst $1) (snd $1)) }
+  | Type '&' { (fst $1, AbsGengo.RefArg (fst $1) (snd $1)) }
+
+ListArgType :: { (AbsGengo.BNFC'Position, [AbsGengo.ArgType]) }
+ListArgType
+  : {- empty -} { (AbsGengo.BNFC'NoPosition, []) }
+  | ArgType { (fst $1, (:[]) (snd $1)) }
+  | ArgType ',' ListArgType { (fst $1, (:) (snd $1) (snd $3)) }
+
 Arg :: { (AbsGengo.BNFC'Position, AbsGengo.Arg) }
 Arg
-  : Type Ident { (fst $1, AbsGengo.VArg (fst $1) (snd $1) (snd $2)) }
-  | Type '&' Ident { (fst $1, AbsGengo.RefArg (fst $1) (snd $1) (snd $3)) }
+  : ArgType Ident { (fst $1, AbsGengo.Arg (fst $1) (snd $1) (snd $2)) }
 
 ListArg :: { (AbsGengo.BNFC'Position, [AbsGengo.Arg]) }
 ListArg
@@ -135,6 +146,7 @@ Type
   : 'int' { (uncurry AbsGengo.BNFC'Position (tokenLineCol $1), AbsGengo.Int (uncurry AbsGengo.BNFC'Position (tokenLineCol $1))) }
   | 'string' { (uncurry AbsGengo.BNFC'Position (tokenLineCol $1), AbsGengo.Str (uncurry AbsGengo.BNFC'Position (tokenLineCol $1))) }
   | 'bool' { (uncurry AbsGengo.BNFC'Position (tokenLineCol $1), AbsGengo.Bool (uncurry AbsGengo.BNFC'Position (tokenLineCol $1))) }
+  | Type '(' ListArgType ')' { (fst $1, AbsGengo.Fun (fst $1) (snd $1) (snd $3)) }
 
 Expr6 :: { (AbsGengo.BNFC'Position, AbsGengo.Expr) }
 Expr6
@@ -175,6 +187,7 @@ Expr1
 Expr :: { (AbsGengo.BNFC'Position, AbsGengo.Expr) }
 Expr
   : Expr1 '||' Expr { (fst $1, AbsGengo.EOr (fst $1) (snd $1) (snd $3)) }
+  | '(' ListArg ')' '=>' Type Block { (uncurry AbsGengo.BNFC'Position (tokenLineCol $1), AbsGengo.ELambda (uncurry AbsGengo.BNFC'Position (tokenLineCol $1)) (snd $2) (snd $5) (snd $6)) }
   | Expr1 { (fst $1, (snd $1)) }
 
 ListExpr :: { (AbsGengo.BNFC'Position, [AbsGengo.Expr]) }

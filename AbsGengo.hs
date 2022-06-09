@@ -26,8 +26,12 @@ type TopDef = TopDef' BNFC'Position
 data TopDef' a = FnDef a Ident [Arg' a] (Type' a) (Block' a)
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
+type ArgType = ArgType' BNFC'Position
+data ArgType' a = VArg a (Type' a) | RefArg a (Type' a)
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
+
 type Arg = Arg' BNFC'Position
-data Arg' a = VArg a (Type' a) Ident | RefArg a (Type' a) Ident
+data Arg' a = Arg a (ArgType' a) Ident
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type Block = Block' BNFC'Position
@@ -60,7 +64,8 @@ data Else' a = ElseBlock a (Block' a) | ElseIf a (If' a)
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type Type = Type' BNFC'Position
-data Type' a = Int a | Str a | Bool a
+data Type' a
+    = Int a | Str a | Bool a | Fun a (Type' a) [ArgType' a]
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type Expr = Expr' BNFC'Position
@@ -78,6 +83,7 @@ data Expr' a
     | ERel a (Expr' a) (RelOp' a) (Expr' a)
     | EAnd a (Expr' a) (Expr' a)
     | EOr a (Expr' a) (Expr' a)
+    | ELambda a [Arg' a] (Type' a) (Block' a)
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type AddOp = AddOp' BNFC'Position
@@ -118,10 +124,14 @@ instance HasPosition TopDef where
   hasPosition = \case
     FnDef p _ _ _ _ -> p
 
+instance HasPosition ArgType where
+  hasPosition = \case
+    VArg p _ -> p
+    RefArg p _ -> p
+
 instance HasPosition Arg where
   hasPosition = \case
-    VArg p _ _ -> p
-    RefArg p _ _ -> p
+    Arg p _ _ -> p
 
 instance HasPosition Block where
   hasPosition = \case
@@ -156,6 +166,7 @@ instance HasPosition Type where
     Int p -> p
     Str p -> p
     Bool p -> p
+    Fun p _ _ -> p
 
 instance HasPosition Expr where
   hasPosition = \case
@@ -172,6 +183,7 @@ instance HasPosition Expr where
     ERel p _ _ _ -> p
     EAnd p _ _ -> p
     EOr p _ _ -> p
+    ELambda p _ _ _ -> p
 
 instance HasPosition AddOp where
   hasPosition = \case

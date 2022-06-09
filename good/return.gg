@@ -1,0 +1,22 @@
+fn f(int x) -> int {
+    // if-else returns
+    if (x % 2 == 0) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+fn g(int x) -> int {
+    // nested block return
+    {
+        return x;
+    }
+}
+
+fn main() -> int {
+    f(0);
+    g(0);
+    print("Success!\n");
+    return 0;
+}

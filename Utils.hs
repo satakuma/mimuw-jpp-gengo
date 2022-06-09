@@ -9,8 +9,10 @@ mainFnIdent = Ident "main"
 builtInNames = ["print"]
 
 getArgIdent :: Arg -> Ident
-getArgIdent (VArg _ _ ident) = ident
-getArgIdent (RefArg _ _ ident) = ident
+getArgIdent (Arg _ _ ident) = ident
 
 getTopDefIdent :: TopDef -> Ident
 getTopDefIdent (FnDef _ ident _ _ _) = ident
+
+argToArgType :: Arg -> ArgType
+argToArgType (Arg _ at _) = at

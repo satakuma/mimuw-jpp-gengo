@@ -1,0 +1,11 @@
+fn f() -> int {
+    if (0 == 0) {
+        return 0;
+    }
+    print("Tu nie dojdziemy, ale i tak nie program nie przejdzie");
+}
+
+fn main() -> int {
+    f();
+    return 0;
+}

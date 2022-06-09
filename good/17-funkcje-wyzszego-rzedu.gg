@@ -1,0 +1,14 @@
+fn licznik(int start, int(int) dodaj) -> int(int) {
+    return (int x) => int { start = start + dodaj(x); return start; };
+}
+
+fn main() -> int {
+    int() wypisz = () => int { print("wypisuje\n"); return 0; };
+    wypisz();
+
+    int(int) l = licznik(0, (int x) => int { return 2 * x; });
+    print(l(1)); print("\n");
+    print(l(2)); print("\n");
+
+    return 0;
+}

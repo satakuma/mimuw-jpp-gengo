@@ -51,7 +51,7 @@ run v input =
            putStrV v "Parse successful!"
            showTree v tree
            putStrV v "Typechecking..."
-           typecheckRes <- runTypecheck $ typecheck tree
+           let typecheckRes = runTypecheck $ typecheck tree
            case typecheckRes of
              Left err -> do
                hPutStrLn stderr "== Typecheck error ===="

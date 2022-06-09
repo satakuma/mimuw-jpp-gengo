@@ -38,9 +38,9 @@ The symbols used in Gengo are the following:
   | ( | ) | -> | &
   | , | { | } | ;
   | = | - | ! | &&
-  | || | + | * | /
-  | % | < | <= | >
-  | >= | == | != |
+  | || | => | + | *
+  | / | % | < | <=
+  | > | >= | == | !=
 
 ===Comments===
 Single-line comments begin with //.Multiple-line comments are  enclosed with /* and */.
@@ -55,8 +55,12 @@ All other symbols are terminals.
   | //TopDef// | -> | ``fn`` //Ident// ``(`` //[Arg]// ``)`` ``->`` //Type// //Block//
   | //[TopDef]// | -> | //TopDef//
   |  |  **|**  | //TopDef// //[TopDef]//
-  | //Arg// | -> | //Type// //Ident//
-  |  |  **|**  | //Type// ``&`` //Ident//
+  | //ArgType// | -> | //Type//
+  |  |  **|**  | //Type// ``&``
+  | //[ArgType]// | -> | **eps**
+  |  |  **|**  | //ArgType//
+  |  |  **|**  | //ArgType// ``,`` //[ArgType]//
+  | //Arg// | -> | //ArgType// //Ident//
   | //[Arg]// | -> | **eps**
   |  |  **|**  | //Arg//
   |  |  **|**  | //Arg// ``,`` //[Arg]//
@@ -81,6 +85,7 @@ All other symbols are terminals.
   | //Type// | -> | ``int``
   |  |  **|**  | ``string``
   |  |  **|**  | ``bool``
+  |  |  **|**  | //Type// ``(`` //[ArgType]// ``)``
   | //Expr6// | -> | //Ident//
   |  |  **|**  | //Integer//
   |  |  **|**  | ``true``
@@ -100,6 +105,7 @@ All other symbols are terminals.
   | //Expr1// | -> | //Expr2// ``&&`` //Expr1//
   |  |  **|**  | //Expr2//
   | //Expr// | -> | //Expr1// ``||`` //Expr//
+  |  |  **|**  | ``(`` //[Arg]// ``)`` ``=>`` //Type// //Block//
   |  |  **|**  | //Expr1//
   | //[Expr]// | -> | **eps**
   |  |  **|**  | //Expr//

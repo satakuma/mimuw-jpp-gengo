@@ -82,27 +82,30 @@ instance Show InterpretException where
 
 alloc :: InterpretM Loc
 alloc = do
-  (InterpreterState store _ _ ) <- get
-  return (size store)
+  (InterpreterState store _ _) <- get
+  let loc = size store
+  storeValue loc VVoid -- placeholder
+  return loc
 
 storeValue :: Loc -> Value -> InterpretM ()
 storeValue loc v = do
-  state@(InterpreterState store _ _ ) <- get
+  state@(InterpreterState store _ _) <- get
   put $ state { store = Map.insert loc v store }
-
-lookupVar :: Ident -> InterpretM (Maybe Loc)
-lookupVar ident = do
-  env <- ask
-  return $ Map.lookup ident env
 
 lookupValue :: Ident -> InterpretM (Maybe Value)
 lookupValue ident = do
   loc <- lookupVar ident
   case loc of
     Just loc' -> do
-      (InterpreterState store _ _ ) <- get
+      (InterpreterState store _ _) <- get
       return $ Map.lookup loc' store
     _ -> return Nothing
+
+lookupVar :: Ident -> InterpretM (Maybe Loc)
+lookupVar ident = asks (Map.lookup ident)
+
+insertVar :: Ident -> Loc -> Env -> Env
+insertVar ident loc env = Map.insert ident loc env
 
 
 class Executable a where
@@ -110,14 +113,21 @@ class Executable a where
 
 
 instance Executable Program where
-  interpret (Program _ []) = do
-    (Just (VFn env _ block)) <- lookupValue mainFnIdent
-    local (const env) (interpretFnBlock block)
-  interpret (Program p (tdef:tdefs)) = do
-    loc <- alloc
-    fn <- interpret tdef
-    storeValue loc fn
-    local (Map.insert (getTopDefIdent tdef) loc) (interpret $ Program p tdefs)
+  interpret (Program _ tdefs) = populateAndInterpret tdefs tdefs
+    where
+      -- First, populate the environment with top definitions
+      populateAndInterpret tdefsAll (tdef:tdefs) = do 
+        loc <- alloc
+        local (insertVar (getTopDefIdent tdef) loc) (populateAndInterpret tdefsAll tdefs)
+      -- Next, interpret fn defs with updated environment and run main fn
+      populateAndInterpret tdefsAll [] = do 
+        mapM_ interpretTopDef tdefsAll
+        (Just (VFn env _ block)) <- lookupValue mainFnIdent
+        local (const env) (interpretFnBlock block)
+      interpretTopDef tdef = do
+        fn <- interpret tdef
+        loc <- lookupVar (getTopDefIdent tdef)
+        storeValue (fromJust loc) fn
 
 
 instance Executable TopDef where
@@ -185,9 +195,10 @@ instance Executable [Stmt] where
       SExp p e -> interpret e >> rest
       NestFn p tdef -> do
         loc <- alloc
-        fn <- interpret tdef
+        let changeEnv = Map.insert (getTopDefIdent tdef) loc
+        fn <- local changeEnv (interpret tdef)
         storeValue loc fn
-        local (Map.insert (getTopDefIdent tdef) loc) rest
+        local changeEnv rest
       Break p -> do
         state <- get
         put (state { loopInterrupt = Just IBreak })
@@ -277,13 +288,14 @@ instance Executable Expr where
         (VBool b1) <- interpret e1
         (VBool b2) <- interpret e2
         return (VBool (b1 || b2))
+      ELambda p args _ block -> do
+        env <- ask
+        return $ VFn env args block
       EApp p ident@(Ident name) args -> do
         f <- lookupValue ident
         case f of
           Just fn@(VFn env args' block) -> do
-            loc <- alloc
-            storeValue loc fn
-            env' <- foldM (\env (a, e) -> addArg env a e) (Map.insert ident loc env) (zip args' args)
+            env' <- foldM (\env (a, e) -> addArg env a e) env (zip args' args)
             local (const env') (interpretFnBlock block)
           Nothing -> case name of 
             "print" -> do
@@ -292,14 +304,14 @@ instance Executable Expr where
               return VVoid
     where
       addArg :: Env -> Arg -> Expr -> InterpretM Env
-      addArg env arg expr = do
-        case arg of
-          VArg _ _ ident -> do
+      addArg env (Arg _ at ident) expr = do
+        case at of
+          VArg _ _ -> do
             value <- interpret expr
             loc <- alloc
             storeValue loc value
             return (Map.insert ident loc env)
-          RefArg _ _ ident -> do
+          RefArg _ _ -> do
             let (EVar _ ident') = expr
             (Just loc) <- lookupVar ident'
             return (Map.insert ident loc env)

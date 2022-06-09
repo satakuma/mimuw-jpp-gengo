@@ -1,0 +1,19 @@
+fn f(int n) -> string {
+    if (n <= 0) {
+        return "f";
+    }
+    return g(n - 1);
+}
+
+fn g(int n) -> string {
+    if (n <= 0) {
+        return "g";
+    }
+    return f(n - 1);
+}
+
+fn main() -> int {
+    print(f(10));
+    print("\n");
+    return 0;
+}

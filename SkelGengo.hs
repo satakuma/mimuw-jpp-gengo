@@ -27,10 +27,14 @@ transTopDef :: Show a => AbsGengo.TopDef' a -> Result
 transTopDef x = case x of
   AbsGengo.FnDef _ ident args type_ block -> failure x
 
+transArgType :: Show a => AbsGengo.ArgType' a -> Result
+transArgType x = case x of
+  AbsGengo.VArg _ type_ -> failure x
+  AbsGengo.RefArg _ type_ -> failure x
+
 transArg :: Show a => AbsGengo.Arg' a -> Result
 transArg x = case x of
-  AbsGengo.VArg _ type_ ident -> failure x
-  AbsGengo.RefArg _ type_ ident -> failure x
+  AbsGengo.Arg _ argtype ident -> failure x
 
 transBlock :: Show a => AbsGengo.Block' a -> Result
 transBlock x = case x of
@@ -65,6 +69,7 @@ transType x = case x of
   AbsGengo.Int _ -> failure x
   AbsGengo.Str _ -> failure x
   AbsGengo.Bool _ -> failure x
+  AbsGengo.Fun _ type_ argtypes -> failure x
 
 transExpr :: Show a => AbsGengo.Expr' a -> Result
 transExpr x = case x of
@@ -81,6 +86,7 @@ transExpr x = case x of
   AbsGengo.ERel _ expr1 relop expr2 -> failure x
   AbsGengo.EAnd _ expr1 expr2 -> failure x
   AbsGengo.EOr _ expr1 expr2 -> failure x
+  AbsGengo.ELambda _ args type_ block -> failure x
 
 transAddOp :: Show a => AbsGengo.AddOp' a -> Result
 transAddOp x = case x of

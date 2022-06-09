@@ -21,6 +21,7 @@ fn int_to_str(int x) -> string {
     } else {
         print("Sory, tyle nie umiem!\n");
         1 / 0;
+        return "????";
     }
 }
 

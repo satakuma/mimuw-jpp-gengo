@@ -153,10 +153,19 @@ instance Print [AbsGengo.TopDef' a] where
   prt _ [x] = concatD [prt 0 x]
   prt _ (x:xs) = concatD [prt 0 x, prt 0 xs]
 
+instance Print (AbsGengo.ArgType' a) where
+  prt i = \case
+    AbsGengo.VArg _ type_ -> prPrec i 0 (concatD [prt 0 type_])
+    AbsGengo.RefArg _ type_ -> prPrec i 0 (concatD [prt 0 type_, doc (showString "&")])
+
+instance Print [AbsGengo.ArgType' a] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
+
 instance Print (AbsGengo.Arg' a) where
   prt i = \case
-    AbsGengo.VArg _ type_ id_ -> prPrec i 0 (concatD [prt 0 type_, prt 0 id_])
-    AbsGengo.RefArg _ type_ id_ -> prPrec i 0 (concatD [prt 0 type_, doc (showString "&"), prt 0 id_])
+    AbsGengo.Arg _ argtype id_ -> prPrec i 0 (concatD [prt 0 argtype, prt 0 id_])
 
 instance Print [AbsGengo.Arg' a] where
   prt _ [] = concatD []
@@ -200,6 +209,7 @@ instance Print (AbsGengo.Type' a) where
     AbsGengo.Int _ -> prPrec i 0 (concatD [doc (showString "int")])
     AbsGengo.Str _ -> prPrec i 0 (concatD [doc (showString "string")])
     AbsGengo.Bool _ -> prPrec i 0 (concatD [doc (showString "bool")])
+    AbsGengo.Fun _ type_ argtypes -> prPrec i 0 (concatD [prt 0 type_, doc (showString "("), prt 0 argtypes, doc (showString ")")])
 
 instance Print (AbsGengo.Expr' a) where
   prt i = \case
@@ -216,6 +226,7 @@ instance Print (AbsGengo.Expr' a) where
     AbsGengo.ERel _ expr1 relop expr2 -> prPrec i 2 (concatD [prt 2 expr1, prt 0 relop, prt 3 expr2])
     AbsGengo.EAnd _ expr1 expr2 -> prPrec i 1 (concatD [prt 2 expr1, doc (showString "&&"), prt 1 expr2])
     AbsGengo.EOr _ expr1 expr2 -> prPrec i 0 (concatD [prt 1 expr1, doc (showString "||"), prt 0 expr2])
+    AbsGengo.ELambda _ args type_ block -> prPrec i 0 (concatD [doc (showString "("), prt 0 args, doc (showString ")"), doc (showString "=>"), prt 0 type_, prt 0 block])
 
 instance Print [AbsGengo.Expr' a] where
   prt _ [] = concatD []

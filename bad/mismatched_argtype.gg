@@ -1,0 +1,9 @@
+fn f(int(int) arg) -> int {
+    return arg(42);
+}
+
+fn main() -> int {
+    int(int&) g = (int& x) => int { x = x + 5; return x; };
+    print(f(g));
+    return 0;
+}

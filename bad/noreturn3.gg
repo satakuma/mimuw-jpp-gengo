@@ -1,0 +1,15 @@
+fn f() -> int {
+    int i = 0;
+    while (i < 16) {
+        if (i % 7 == 0) {
+            return i / 7;
+        }
+        i = i + 1;
+    }
+    // return 0; // z tym return już działa
+}
+
+fn main() -> int {
+    f();
+    return 0;
+}
